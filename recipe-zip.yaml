@@ -1,0 +1,82 @@
+# =============================================================================
+#  Nitro_Framework :: txAdmin recipe (single archive variant)
+# =============================================================================
+#  Use this recipe when the repository is NOT published as source, but only
+#  dist/Nitro_Framework-<version>.zip and this file are uploaded to GitHub.
+#  Two files, no git required:
+#
+#    1. Upload dist/Nitro_Framework-1.0.0.zip to the repository root.
+#    2. Upload this file to txadmin/recipe-zip.yaml.
+#    3. Set the URL below to the raw URL of the zip.
+#    4. Give txAdmin this file as a "Custom Recipe".
+#
+#  The other recipe (recipe.yaml) downloads the resource folders directly and
+#  is meant for a repository that contains the framework source.
+# =============================================================================
+
+$engine: 3
+$onesync: on
+
+name: Nitro_Framework (zip)
+version: 1.0.0
+author: Nitro_Framework
+description: Modular roleplay framework built on oxmysql, installed from the release archive.
+
+tasks:
+    # -- Download the release archive ---------------------------------------
+    # Raw URL of dist/Nitro_Framework-<version>.zip on the public repository.
+    - action: download_file
+      url: https://raw.githubusercontent.com/THAVIP3R-BIT/Nitro_Framework/main/dist/Nitro_Framework-1.0.0.zip
+      path: ./tmp/nitro.zip
+
+    - action: unzip
+      src: ./tmp/nitro.zip
+      dest: ./tmp
+
+    - action: ensure_dir
+      path: ./resources
+
+    # -- oxmysql -------------------------------------------------------------
+    - action: download_file
+      url: https://github.com/overextended/oxmysql/releases/latest/download/oxmysql.zip
+      path: ./tmp/oxmysql.zip
+
+    - action: unzip
+      src: ./tmp/oxmysql.zip
+      dest: ./resources
+
+    # -- Nitro_Framework -----------------------------------------------------
+    - action: copy_path
+      src: ./tmp/resources
+      dest: ./resources
+      overwrite: true
+
+    - action: move_path
+      src: ./tmp/txadmin/server.cfg
+      dest: ./server.cfg
+      overwrite: true
+
+    # -- Database ------------------------------------------------------------
+    - action: connect_database
+
+    - action: query_database
+      file: ./tmp/migrations/001_core.sql
+
+    - action: query_database
+      file: ./tmp/migrations/002_inventory.sql
+
+    - action: query_database
+      file: ./tmp/migrations/003_economy.sql
+
+    - action: query_database
+      file: ./tmp/migrations/004_employment.sql
+
+    - action: query_database
+      file: ./tmp/migrations/005_world.sql
+
+    - action: query_database
+      file: ./tmp/migrations/006_governance.sql
+
+    # -- Clean up ------------------------------------------------------------
+    - action: remove_path
+      path: ./tmp
